@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RSU & ESPP Tax Impact Calculator</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #2d3748;
+            background: #f7fafc;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: #2d3748;
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .disclaimer-banner {
+            background: #fed7d7;
+            border: 2px solid #fc8181;
+            padding: 20px;
+            margin: 0;
+            text-align: center;
+        }
+        
+        .disclaimer-banner h2 {
+            color: #c53030;
+            margin-bottom: 10px;
+            font-size: 1.3em;
+        }
+        
+        .disclaimer-banner p {
+            color: #742a2a;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        
+        .acknowledgment-section {
+            background: #fff5f5;
+            border: 1px solid #fed7d7;
+            padding: 25px;
+            margin: 20px;
+            border-radius: 10px;
+        }
+        
+        .acknowledgment-checkbox {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 15px;
+            gap: 10px;
+        }
+        
+        .acknowledgment-checkbox input[type="checkbox"] {
+            margin-top: 5px;
+            transform: scale(1.2);
+        }
+        
+        .acknowledgment-checkbox label {
+            font-size: 0.95em;
+            color: #2d3748;
+        }
+        
+        .continue-btn {
+            background: #4a5568;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            width: 100%;
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        
+        .continue-btn.enabled {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        .continue-btn.enabled:hover {
+            background: #2d3748;
+        }
+        
+        .content {
+            padding: 30px;
+            display: none;
+        }
+        
+        .content.visible {
+            display: block;
+        }
+        
+        .warning-box {
+            background: #fff5f5;
+            border-left: 4px solid #fc8181;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .warning-box h3 {
+            color: #c53030;
+            margin-bottom: 10px;
+        }
+        
+        .warning-box ul {
+            color: #742a2a;
+            padding-left: 20px;
+        }
+        
+        .warning-box li {
+            margin-bottom: 5px;
+        }
+        
+        .portfolio-summary {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 30px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .portfolio-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .portfolio-item {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .portfolio-item h3 {
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+        
+        .portfolio-item .value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #2d3748;
+        }
+        
+        .input-section {
+            background: #ffffff;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 30px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2d3748;
+        }
+        
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1.1em;
+            transition: border-color 0.3s ease;
+        }
+        
+        .input-group input:focus {
+            outline: none;
+            border-color: #4a5568;
+        }
+        
+        .tax-inputs {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .calculate-btn {
+            background: #4a5568;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            width: 100%;
+        }
+        
+        .calculate-btn:hover {
+            background: #2d3748;
+        }
+        
+        .results {
+            display: none;
+            margin-top: 30px;
+        }
+        
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .strategy {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 25px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .strategy h3 {
+            color: #2d3748;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .strategy-details {
+            margin-bottom: 15px;
+        }
+        
+        .strategy-details strong {
+            display: inline-block;
+            width: 130px;
+        }
+        
+        .tax-breakdown {
+            background: #f8f9fa;
+            border-left: 3px solid #6c757d;
+            padding: 12px;
+            margin: 10px 0;
+            font-size: 0.9em;
+            border-radius: 0 5px 5px 0;
+        }
+        
+        .tax-breakdown-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+        
+        .tax-breakdown-item:last-child {
+            margin-bottom: 0;
+            font-weight: 600;
+            border-top: 1px solid #dee2e6;
+            padding-top: 5px;
+        }
+        
+        .rsu-tax-note {
+            background: #fff3cd;
+            border-left: 3px solid #ffc107;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 0.85em;
+            border-radius: 0 5px 5px 0;
+        }
+        
+        .already-paid {
+            color: #6c757d;
+            font-style: italic;
+        }
+        
+        .net-amount {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #2d3748;
+            text-align: center;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        
+        .chart-container {
+            background: white;
+            border-radius: 10px;
+            padding: 25px 25px 90px 25px;
+            margin-bottom: 90px;
+            border: 1px solid #e9ecef;
+            position: relative;
+            height: 470px;
+        }
+        
+        .chart-title {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #2d3748;
+            font-size: 1.3em;
+            font-weight: 600;
+        }
+        
+        .chart-subtitle {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #666;
+            font-size: 0.95em;
+        }
+        
+        .explanation {
+            background: #e7f3ff;
+            border: 1px solid #b8daff;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .explanation h3 {
+            color: #004085;
+            margin-bottom: 15px;
+        }
+        
+        .explanation ul {
+            padding-left: 20px;
+        }
+        
+        .explanation li {
+            margin-bottom: 8px;
+        }
+        
+        .final-disclaimer {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 10px;
+            padding: 25px;
+            margin-top: 30px;
+            text-align: center;
+        }
+        
+        .final-disclaimer h3 {
+            color: #856404;
+            margin-bottom: 15px;
+        }
+        
+        .final-disclaimer p {
+            color: #856404;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .professional-advice {
+            background: #d1ecf1;
+            border: 2px solid #17a2b8;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        .professional-advice h4 {
+            color: #0c5460;
+            margin-bottom: 10px;
+        }
+        
+        .professional-advice p {
+            color: #0c5460;
+            font-weight: 600;
+        }
+        
+        @media (max-width: 768px) {
+            .comparison-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            .tax-inputs {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>RSU & ESPP Tax Impact Calculator</h1>
+            <p>Client-directed analysis for equity compensation liquidation scenarios</p>
+        </div>
+        
+        <div class="disclaimer-banner">
+            <h2>⚠️ IMPORTANT: CALCULATION TOOL ONLY</h2>
+            <p>This calculator provides tax impact analysis based on your inputs. It does not provide recommendations or advice on which approach to take.</p>
+        </div>
+        
+        <div class="acknowledgment-section">
+            <h3>Required Acknowledgments</h3>
+            <p>Please read all of the following before proceeding:</p>
+            
+            <ul style="margin: 20px 0; padding-left: 30px; line-height: 1.8;">
+                <li>I understand this calculator provides tax impact estimates based on my inputs and may not reflect actual tax liability due to individual circumstances not considered.</li>
+                <li>I acknowledge this tool performs calculations only and does not recommend which liquidation approach I should take.</li>
+                <li>I will make my own decisions about equity compensation liquidation and consult qualified professionals as needed.</li>
+                <li>I understand this is a calculation tool only and does not constitute tax advice, investment advice, or professional recommendations of any kind.</li>
+            </ul>
+            
+            <div class="acknowledgment-checkbox">
+                <input type="checkbox" id="acknowledge-all">
+                <label for="acknowledge-all"><strong>I acknowledge I have read and agree to all of the above statements.</strong></label>
+            </div>
+            
+            <button class="continue-btn" id="continue-btn" onclick="proceedToTool()">Continue</button>
+        </div>
+        
+        <div class="content" id="main-content">
+            <div class="warning-box">
+                <h3>⚠️ Critical Limitations</h3>
+                <ul>
+                    <li><strong>State Taxes Not Included:</strong> Calculations assume no state taxes (CA residents face additional 13.3%)</li>
+                    <li><strong>AMT Not Considered:</strong> Alternative Minimum Tax may significantly affect ESPP taxation</li>
+                    <li><strong>Simplified Tax Rates:</strong> Actual rates vary by total income, filing status, and tax year</li>
+                    <li><strong>No Wash Sale Rules:</strong> Repeated transactions may trigger wash sale limitations</li>
+                    <li><strong>Holding Period Assumptions:</strong> Long-term vs. short-term treatment affects rates</li>
+                </ul>
+            </div>
+            
+            <div class="portfolio-summary">
+                <h2>Your Portfolio Parameters</h2>
+                <div class="portfolio-grid">
+                    <div class="portfolio-item">
+                        <h3>RSU Shares</h3>
+                        <div class="value" id="rsu-shares">2,000</div>
+                        <p>Vesting price configurable</p>
+                    </div>
+                    <div class="portfolio-item">
+                        <h3>ESPP Shares</h3>
+                        <div class="value" id="espp-shares">3,000</div>
+                        <p>Purchased at $60.75</p>
+                    </div>
+                    <div class="portfolio-item">
+                        <h3>Current Stock Price</h3>
+                        <div class="value" id="current-price">$70.00</div>
+                        <p>Per share</p>
+                    </div>
+                    <div class="portfolio-item">
+                        <h3>Total Portfolio Value</h3>
+                        <div class="value" id="total-value">$350,000</div>
+                        <p>Current market value</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="input-section">
+                <h2>Calculate Tax Impact for Your Target Amount</h2>
+                <div class="input-group">
+                    <label for="withdrawal-amount">Target withdrawal amount:</label>
+                    <input type="number" id="withdrawal-amount" placeholder="Enter your desired amount (e.g., 50000)" min="0" max="350000">
+                </div>
+                
+                <div class="tax-inputs">
+                    <div class="input-group">
+                        <label for="rsu-vesting-price">RSU Vesting Price ($):</label>
+                        <input type="number" id="rsu-vesting-price" value="55" min="1" max="200" step="0.01">
+                    </div>
+                    <div class="input-group">
+                        <label for="federal-rate">Federal Tax Rate (%):</label>
+                        <input type="number" id="federal-rate" value="24" min="0" max="50" step="0.1">
+                    </div>
+                    <div class="input-group">
+                        <label for="cap-gains-rate">Capital Gains Rate (%):</label>
+                        <input type="number" id="cap-gains-rate" value="15" min="0" max="30" step="0.1">
+                    </div>
+                    <div class="input-group">
+                        <label for="state-rate">State Tax Rate (%):</label>
+                        <input type="number" id="state-rate" value="0" min="0" max="15" step="0.1">
+                    </div>
+                </div>
+                
+                <button class="calculate-btn" onclick="calculateScenarios()">Calculate Tax Impact</button>
+            </div>
+            
+            <div class="results" id="results">
+                <div class="comparison-grid">
+                    <div class="strategy" id="strategy-a">
+                        <h3>Analysis A: RSU-Heavy Liquidation</h3>
+                        <div id="strategy-a-details"></div>
+                        <div class="net-amount" id="strategy-a-net"></div>
+                    </div>
+                    
+                    <div class="strategy" id="strategy-b">
+                        <h3>Analysis B: ESPP-Heavy Liquidation</h3>
+                        <div id="strategy-b-details"></div>
+                        <div class="net-amount" id="strategy-b-net"></div>
+                    </div>
+                    
+                    <div class="strategy" id="strategy-c">
+                        <h3>Analysis C: Balanced Liquidation</h3>
+                        <div id="strategy-c-details"></div>
+                        <div class="net-amount" id="strategy-c-net"></div>
+                    </div>
+                </div>
+                
+                <div class="chart-container">
+                    <div class="chart-title">Tax Impact Analysis</div>
+                    <div class="chart-subtitle">Net proceeds and tax obligations for your target amount</div>
+                    <canvas id="taxChart"></canvas>
+                </div>
+                
+                <div class="explanation">
+                    <h3>📚 Tax Calculation Background</h3>
+                    <ul>
+                        <li><strong>RSU Tax Timing:</strong> 
+                            <ul style="margin-top: 5px; padding-left: 20px;">
+                                <li><em>At Vesting:</em> Taxed as ordinary income at market price (already paid)</li>
+                                <li><em>At Sale:</em> Capital gains tax on appreciation from vesting price to sale price</li>
+                            </ul>
+                        </li>
+                        <li><strong>ESPP Taxation:</strong> The discount amount is typically taxed as ordinary income. Additional gain from purchase price to sale price may be capital gains.</li>
+                        <li><strong>Tax Rate Differences:</strong> Ordinary income taxed at higher federal rates (up to 37%) vs. long-term capital gains (0%, 15%, or 20%).</li>
+                        <li><strong>State Considerations:</strong> States like California add significant tax burden (up to 13.3% additional).</li>
+                        <li><strong>AMT Impact:</strong> Alternative Minimum Tax can significantly affect ESPP transactions.</li>
+                        <li><strong>Calculator Note:</strong> This tool calculates only <em>additional</em> tax liability from your requested liquidation. RSU vesting taxes were already paid when shares vested.</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="professional-advice">
+                <h4>🎯 For Professional Guidance</h4>
+                <p>For comprehensive analysis of your specific situation, consider consulting with qualified tax and financial professionals who can address state taxes, AMT implications, and personalized planning strategies.</p>
+            </div>
+            
+            <div class="final-disclaimer">
+                <h3>IMPORTANT LIMITATIONS</h3>
+                <p>This calculator uses simplified assumptions and may not capture all factors affecting your tax liability.</p>
+                <p>Actual taxes may vary significantly based on individual circumstances, timing, and factors not included in this analysis.</p>
+                <p>This tool provides calculations only - you are responsible for making your own liquidation decisions.</p>
+                <p><strong>Consider professional consultation for comprehensive tax and financial planning.</strong></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Educational tool constants - simplified for illustration
+        const RSU_SHARES = 2000;
+        const ESPP_SHARES = 3000;
+        const CURRENT_PRICE = 70.00;
+        const ESPP_PURCHASE_PRICE = 60.75;
+        const ESPP_ORIGINAL_PRICE = 71.25; // Assuming 15% discount from $71.25
+        const RSU_VESTING_PRICE = 70.00; // Assuming vested at current price for simplicity
+
+        let taxChart = null;
+
+        // Acknowledgment system
+        function checkAcknowledgments() {
+            const checkbox = document.getElementById('acknowledge-all');
+            const continueBtn = document.getElementById('continue-btn');
+            
+            if (checkbox.checked) {
+                continueBtn.classList.add('enabled');
+            } else {
+                continueBtn.classList.remove('enabled');
+            }
+        }
+
+        function proceedToTool() {
+            const checkbox = document.getElementById('acknowledge-all');
+            
+            if (checkbox.checked) {
+                document.querySelector('.acknowledgment-section').style.display = 'none';
+                document.getElementById('main-content').classList.add('visible');
+            } else {
+                alert('Please acknowledge the required items before proceeding.');
+            }
+        }
+
+        // Tax impact calculation - CLIENT-DIRECTED ANALYSIS
+        function calculateTaxes(rsuShares, esppShares, federalRate, capGainsRate, stateRate, rsuVestingPrice) {
+            const rsuProceeds = rsuShares * CURRENT_PRICE;
+            const esppProceeds = esppShares * CURRENT_PRICE;
+            const totalProceeds = rsuProceeds + esppProceeds;
+            
+            // CORRECTED: RSU taxation
+            // RSUs are taxed as ordinary income at vesting (already happened)
+            // Sale of RSUs: any gain/loss from vesting price is capital gains
+            const rsuCapitalGain = rsuShares * (CURRENT_PRICE - rsuVestingPrice);
+            const rsuFederalCapGains = rsuCapitalGain * (capGainsRate / 100);
+            const rsuStateCapGains = rsuCapitalGain * (stateRate / 100);
+            const rsuTax = rsuFederalCapGains + rsuStateCapGains;
+            
+            // CORRECTED: ESPP taxation
+            const esppDiscount = esppShares * (ESPP_ORIGINAL_PRICE - ESPP_PURCHASE_PRICE); // Discount taxed as ordinary income
+            const esppCapitalGain = esppShares * (CURRENT_PRICE - ESPP_ORIGINAL_PRICE); // Additional gain as capital gains
+            
+            // Federal taxes
+            const esppFederalOrdinary = esppDiscount * (federalRate / 100);
+            const esppFederalCapGains = esppCapitalGain * (capGainsRate / 100);
+            
+            // State taxes
+            const esppStateOrdinary = esppDiscount * (stateRate / 100);
+            const esppStateCapGains = esppCapitalGain * (stateRate / 100);
+            
+            const esppTax = esppFederalOrdinary + esppFederalCapGains + esppStateOrdinary + esppStateCapGains;
+            
+            // Total calculations
+            const totalFederalOrdinary = esppFederalOrdinary;
+            const totalFederalCapGains = rsuFederalCapGains + esppFederalCapGains;
+            const totalState = rsuStateCapGains + esppStateOrdinary + esppStateCapGains;
+            const totalTax = rsuTax + esppTax;
+            const netProceeds = totalProceeds - totalTax;
+            
+            // Calculate RSU vesting tax (already paid, for reference)
+            const rsuVestingTaxFederal = rsuShares * rsuVestingPrice * (federalRate / 100);
+            const rsuVestingTaxState = rsuShares * rsuVestingPrice * (stateRate / 100);
+            const rsuVestingTaxTotal = rsuVestingTaxFederal + rsuVestingTaxState;
+            
+            return {
+                totalProceeds,
+                totalTax,
+                netProceeds,
+                rsuProceeds,
+                esppProceeds,
+                rsuTax,
+                esppTax,
+                esppDiscount,
+                esppCapitalGain,
+                rsuCapitalGain,
+                rsuVestingPrice,
+                // RSU vesting tax (already paid)
+                rsuVestingTaxTotal,
+                rsuVestingTaxFederal,
+                rsuVestingTaxState,
+                // Detailed breakdown
+                totalFederalOrdinary,
+                totalFederalCapGains,
+                totalState,
+                stateRate,
+                // Component details
+                rsuFederalCapGains,
+                rsuStateCapGains,
+                esppFederalOrdinary,
+                esppFederalCapGains,
+                esppStateOrdinary,
+                esppStateCapGains
+            };
+        }
+
+        function calculateScenarios() {
+            const withdrawalAmount = parseFloat(document.getElementById('withdrawal-amount').value);
+            const rsuVestingPrice = parseFloat(document.getElementById('rsu-vesting-price').value);
+            const federalRate = parseFloat(document.getElementById('federal-rate').value);
+            const capGainsRate = parseFloat(document.getElementById('cap-gains-rate').value);
+            const stateRate = parseFloat(document.getElementById('state-rate').value);
+            
+            if (!withdrawalAmount || withdrawalAmount <= 0) {
+                alert('Please enter a valid withdrawal amount');
+                return;
+            }
+            
+            if (withdrawalAmount > 350000) {
+                alert('Amount cannot exceed total portfolio value of $350,000');
+                return;
+            }
+            
+            // Scenario A: RSU First
+            const sharesNeeded = Math.ceil(withdrawalAmount / CURRENT_PRICE);
+            let scenarioA = {};
+            
+            if (sharesNeeded <= RSU_SHARES) {
+                scenarioA = {
+                    rsuShares: sharesNeeded,
+                    esppShares: 0,
+                    ...calculateTaxes(sharesNeeded, 0, federalRate, capGainsRate, stateRate, rsuVestingPrice)
+                };
+            } else {
+                const remainingShares = sharesNeeded - RSU_SHARES;
+                scenarioA = {
+                    rsuShares: RSU_SHARES,
+                    esppShares: remainingShares,
+                    ...calculateTaxes(RSU_SHARES, remainingShares, federalRate, capGainsRate, stateRate, rsuVestingPrice)
+                };
+            }
+            
+            // Scenario B: ESPP First
+            let scenarioB = {};
+            
+            if (sharesNeeded <= ESPP_SHARES) {
+                scenarioB = {
+                    rsuShares: 0,
+                    esppShares: sharesNeeded,
+                    ...calculateTaxes(0, sharesNeeded, federalRate, capGainsRate, stateRate, rsuVestingPrice)
+                };
+            } else {
+                const remainingShares = sharesNeeded - ESPP_SHARES;
+                scenarioB = {
+                    rsuShares: remainingShares,
+                    esppShares: ESPP_SHARES,
+                    ...calculateTaxes(remainingShares, ESPP_SHARES, federalRate, capGainsRate, stateRate, rsuVestingPrice)
+                };
+            }
+            
+            // Scenario C: Mixed Approach (50/50 as possible)
+            let scenarioC = {};
+            const halfShares = Math.ceil(sharesNeeded / 2);
+            const rsuForMixed = Math.min(halfShares, RSU_SHARES);
+            const esppForMixed = Math.min(halfShares, ESPP_SHARES);
+            
+            const totalFromHalf = rsuForMixed + esppForMixed;
+            if (totalFromHalf < sharesNeeded) {
+                const shortage = sharesNeeded - totalFromHalf;
+                if (rsuForMixed < RSU_SHARES && rsuForMixed + shortage <= RSU_SHARES) {
+                    scenarioC = {
+                        rsuShares: rsuForMixed + shortage,
+                        esppShares: esppForMixed,
+                        ...calculateTaxes(rsuForMixed + shortage, esppForMixed, federalRate, capGainsRate, stateRate, rsuVestingPrice)
+                    };
+                } else if (esppForMixed < ESPP_SHARES) {
+                    scenarioC = {
+                        rsuShares: rsuForMixed,
+                        esppShares: esppForMixed + shortage,
+                        ...calculateTaxes(rsuForMixed, esppForMixed + shortage, federalRate, capGainsRate, stateRate, rsuVestingPrice)
+                    };
+                }
+            } else {
+                scenarioC = {
+                    rsuShares: rsuForMixed,
+                    esppShares: esppForMixed,
+                    ...calculateTaxes(rsuForMixed, esppForMixed, federalRate, capGainsRate, stateRate, rsuVestingPrice)
+                };
+            }
+            
+            displayResults(scenarioA, scenarioB, scenarioC, withdrawalAmount);
+        }
+
+        function createTaxChart(scenarioA, scenarioB, scenarioC) {
+            const ctx = document.getElementById('taxChart').getContext('2d');
+            
+            if (taxChart) {
+                taxChart.destroy();
+            }
+            
+            const data = {
+                labels: ['Analysis A: RSU-Heavy', 'Analysis B: ESPP-Heavy', 'Analysis C: Balanced'],
+                datasets: [
+                    {
+                        label: 'Net Proceeds',
+                        data: [scenarioA.netProceeds, scenarioB.netProceeds, scenarioC.netProceeds],
+                        backgroundColor: ['#4a5568', '#4a5568', '#4a5568'],
+                        borderColor: ['#2d3748', '#2d3748', '#2d3748'],
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Tax Liability',
+                        data: [scenarioA.totalTax, scenarioB.totalTax, scenarioC.totalTax],
+                        backgroundColor: ['#718096', '#718096', '#718096'],
+                        borderColor: ['#4a5568', '#4a5568', '#4a5568'],
+                        borderWidth: 1
+                    }
+                ]
+            };
+            
+            const config = {
+                type: 'bar',
+                data: data,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            stacked: true,
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                font: {
+                                    size: 11
+                                }
+                            }
+                        },
+                        y: {
+                            stacked: true,
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '$' + value.toLocaleString();
+                                },
+                                font: {
+                                    size: 10
+                                }
+                            },
+                            grid: {
+                                color: '#e2e8f0'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                padding: 20,
+                                font: {
+                                    size: 13,
+                                    weight: 'bold'
+                                },
+                                usePointStyle: true,
+                                pointStyle: 'rect'
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.dataset.label || '';
+                                    const value = '$' + context.parsed.y.toLocaleString('en-US', {
+                                        minimumFractionDigits: 2,
+                                        maximumFractionDigits: 2
+                                    });
+                                    return label + ': ' + value;
+                                }
+                            },
+                            backgroundColor: 'rgba(0,0,0,0.8)',
+                            titleColor: 'white',
+                            bodyColor: 'white',
+                            borderColor: '#ddd',
+                            borderWidth: 1
+                        }
+                    },
+                    layout: {
+                        padding: {
+                            top: 10,
+                            bottom: 10
+                        }
+                    },
+                    animation: {
+                        duration: 1000,
+                        easing: 'easeInOutQuart'
+                    }
+                }
+            };
+            
+            taxChart = new Chart(ctx, config);
+        }
+
+        function generateTaxBreakdown(scenario) {
+            let breakdown = '';
+            let rsuNote = '';
+            
+            // Show RSU vesting tax note if RSU shares are involved
+            if (scenario.rsuShares > 0) {
+                rsuNote = `<div class="rsu-tax-note">
+                    <strong>RSU Tax Context:</strong><br>
+                    <span class="already-paid">Already paid at vesting ($${scenario.rsuVestingPrice}/share): $${scenario.rsuVestingTaxTotal.toLocaleString('en-US', {minimumFractionDigits: 2})}</span><br>
+                    Additional tax liability from sale shown below.
+                </div>`;
+            }
+            
+            // Only show non-zero components for ADDITIONAL taxes at sale
+            if (scenario.totalFederalOrdinary > 0.01) {
+                breakdown += `<div class="tax-breakdown-item"><span>Federal Ordinary Income (ESPP discount):</span><span>$${scenario.totalFederalOrdinary.toLocaleString('en-US', {minimumFractionDigits: 2})}</span></div>`;
+            }
+            
+            if (scenario.totalFederalCapGains > 0.01) {
+                breakdown += `<div class="tax-breakdown-item"><span>Federal Capital Gains (sale gains):</span><span>$${scenario.totalFederalCapGains.toLocaleString('en-US', {minimumFractionDigits: 2})}</span></div>`;
+            }
+            
+            // Only show state tax if rate > 0
+            if (scenario.stateRate > 0 && scenario.totalState > 0.01) {
+                breakdown += `<div class="tax-breakdown-item"><span>State Tax (${scenario.stateRate}%):</span><span>$${scenario.totalState.toLocaleString('en-US', {minimumFractionDigits: 2})}</span></div>`;
+            }
+            
+            // Total line - clarify this is ADDITIONAL
+            breakdown += `<div class="tax-breakdown-item"><span>Additional Tax Liability from Sale:</span><span>$${scenario.totalTax.toLocaleString('en-US', {minimumFractionDigits: 2})}</span></div>`;
+            
+            return (rsuNote + (breakdown ? `<div class="tax-breakdown">${breakdown}</div>` : ''));
+        }
+
+        function displayResults(scenarioA, scenarioB, scenarioC, targetAmount) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.style.display = 'block';
+            
+            // Scenario A details
+            const scenarioADetails = `
+                <div class="strategy-details"><strong>RSU Shares:</strong> ${scenarioA.rsuShares.toLocaleString()}</div>
+                <div class="strategy-details"><strong>ESPP Shares:</strong> ${scenarioA.esppShares.toLocaleString()}</div>
+                <div class="strategy-details"><strong>Gross Proceeds:</strong> $${scenarioA.totalProceeds.toLocaleString('en-US', {minimumFractionDigits: 2})}</div>
+                <div class="strategy-details"><strong>Additional Tax from Sale:</strong> $${scenarioA.totalTax.toLocaleString('en-US', {minimumFractionDigits: 2})}</div>
+                ${generateTaxBreakdown(scenarioA)}
+            `;
+            document.getElementById('strategy-a-details').innerHTML = scenarioADetails;
+            document.getElementById('strategy-a-net').textContent = `Est. Net: $${scenarioA.netProceeds.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+            
+            // Scenario B details
+            const scenarioBDetails = `
+                <div class="strategy-details"><strong>RSU Shares:</strong> ${scenarioB.rsuShares.toLocaleString()}</div>
+                <div class="strategy-details"><strong>ESPP Shares:</strong> ${scenarioB.esppShares.toLocaleString()}</div>
+                <div class="strategy-details"><strong>Gross Proceeds:</strong> $${scenarioB.totalProceeds.toLocaleString('en-US', {minimumFractionDigits: 2})}</div>
+                <div class="strategy-details"><strong>Additional Tax from Sale:</strong> $${scenarioB.totalTax.toLocaleString('en-US', {minimumFractionDigits: 2})}</div>
+                ${generateTaxBreakdown(scenarioB)}
+            `;
+            document.getElementById('strategy-b-details').innerHTML = scenarioBDetails;
+            document.getElementById('strategy-b-net').textContent = `Est. Net: $${scenarioB.netProceeds.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+            
+            // Scenario C details
+            const scenarioCDetails = `
+                <div class="strategy-details"><strong>RSU Shares:</strong> ${scenarioC.rsuShares.toLocaleString()}</div>
+                <div class="strategy-details"><strong>ESPP Shares:</strong> ${scenarioC.esppShares.toLocaleString()}</div>
+                <div class="strategy-details"><strong>Gross Proceeds:</strong> $${scenarioC.totalProceeds.toLocaleString('en-US', {minimumFractionDigits: 2})}</div>
+                <div class="strategy-details"><strong>Additional Tax from Sale:</strong> $${scenarioC.totalTax.toLocaleString('en-US', {minimumFractionDigits: 2})}</div>
+                ${generateTaxBreakdown(scenarioC)}
+            `;
+            document.getElementById('strategy-c-details').innerHTML = scenarioCDetails;
+            document.getElementById('strategy-c-net').textContent = `Est. Net: $${scenarioC.netProceeds.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+            
+            // Create the educational visualization
+            createTaxChart(scenarioA, scenarioB, scenarioC);
+            
+            // Scroll to results
+            resultsDiv.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Initialize acknowledgment system
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('acknowledge-all').addEventListener('change', checkAcknowledgments);
+            
+            document.getElementById('withdrawal-amount').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    calculateScenarios();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
